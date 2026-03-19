@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⭐ 키워드 고르기 ⭐</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⭐</text></svg>" />
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@400;700&display=swap');
+
+    *{margin:0;padding:0;box-sizing:border-box}
+    body,#root{font-family:'Jua',sans-serif;background:#FFF9F0;min-height:100vh}
+
+    .bg-blobs{
+      position:fixed;inset:0;pointer-events:none;z-index:0;
+      background:
+        radial-gradient(circle at 10% 20%,rgba(255,143,171,.12) 0%,transparent 40%),
+        radial-gradient(circle at 80% 10%,rgba(123,232,196,.1) 0%,transparent 35%),
+        radial-gradient(circle at 50% 80%,rgba(139,184,255,.1) 0%,transparent 40%),
+        radial-gradient(circle at 90% 70%,rgba(255,211,61,.08) 0%,transparent 30%),
+        radial-gradient(circle at 20% 90%,rgba(212,165,255,.1) 0%,transparent 35%);
+    }
+
+    .name-screen{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:100vh;padding:32px;position:relative;z-index:1;animation:fadeIn .6s ease;
+    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+    .name-card{
+      background:white;border-radius:32px;padding:48px 40px;
+      box-shadow:0 8px 40px rgba(184,169,232,.18);text-align:center;max-width:440px;width:100%;
+    }
+    .name-card h1{font-size:36px;color:#3D3356;margin-bottom:6px}
+    .name-card .sub{font-family:'Gaegu',cursive;font-size:20px;color:#8B7FA8;font-weight:700;margin-bottom:32px}
+    .name-input{
+      font-family:'Jua',sans-serif;font-size:22px;width:100%;padding:14px 24px;
+      border-radius:50px;border:3px solid #B8A9E8;outline:none;text-align:center;
+      color:#3D3356;background:#FDFAFF;transition:border-color .25s,box-shadow .25s;
+    }
+    .name-input:focus{border-color:#D4A5FF;box-shadow:0 0 0 4px rgba(212,165,255,.25)}
+    .name-input::placeholder{color:#C4BAD8}
+
+    .start-btn{
+      font-family:'Jua',sans-serif;font-size:22px;margin-top:24px;padding:14px 52px;
+      border-radius:50px;border:none;background:linear-gradient(135deg,#FF8FAB,#D4A5FF);
+      color:white;cursor:pointer;box-shadow:0 4px 20px rgba(212,165,255,.4);
+      transition:all .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .start-btn:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 8px 30px rgba(212,165,255,.5)}
+    .start-btn:active{transform:scale(.96)}
+    .start-btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+
+    .admin-link{
+      margin-top:20px;font-family:'Gaegu',cursive;font-weight:700;font-size:16px;
+      color:#B8A9E8;cursor:pointer;background:none;border:none;text-decoration:underline;transition:color .2s;
+    }
+    .admin-link:hover{color:#8B7FA8}
+
+    .select-screen{
+      max-width:940px;margin:0 auto;padding:40px 24px 150px;
+      position:relative;z-index:1;animation:fadeIn .5s ease;
+    }
+    .sel-header{text-align:center;margin-bottom:12px}
+    .sel-header h1{font-size:clamp(24px,5vw,40px);color:#3D3356;letter-spacing:-1px}
+    .sel-header .who{font-family:'Gaegu',cursive;font-size:clamp(16px,3vw,22px);color:#8B7FA8;font-weight:700;margin-top:4px}
+
+    .counter-bar{
+      position:sticky;top:0;z-index:100;background:rgba(255,249,240,.92);
+      backdrop-filter:blur(12px);padding:12px 0;margin-bottom:24px;
+      border-bottom:2px dashed rgba(184,169,232,.3);
+    }
+    .counter-inner{
+      max-width:940px;margin:0 auto;padding:0 24px;
+      display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;
+    }
+    .counter-badge{
+      background:linear-gradient(135deg,#B8A9E8,#8BB8FF);color:white;font-size:18px;
+      padding:6px 20px;border-radius:50px;display:inline-flex;align-items:center;gap:6px;
+      box-shadow:0 3px 12px rgba(139,184,255,.3);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .counter-num{font-size:24px;min-width:28px;text-align:center}
+    .reset-btn{
+      font-family:'Jua',sans-serif;background:white;border:2px solid #FF8FAB;color:#FF8FAB;
+      font-size:14px;padding:5px 16px;border-radius:50px;cursor:pointer;transition:all .25s ease;
+    }
+    .reset-btn:hover{background:#FF8FAB;color:white;transform:scale(1.05)}
+
+    .keywords-cloud{display:flex;flex-wrap:wrap;justify-content:center;gap:11px;padding:8px 0}
+
+    .chip{
+      position:relative;font-family:'Jua',sans-serif;border-radius:50px;cursor:pointer;
+      user-select:none;border:2.5px solid transparent;
+      transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s ease,
+        border-color .25s ease,background .3s ease,color .2s ease;
+      display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+      -webkit-tap-highlight-color:transparent;animation:chipIn .45s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes chipIn{from{opacity:0;transform:scale(.5) rotate(var(--rot))}to{opacity:1;transform:scale(1) rotate(var(--rot))}}
+
+    .chip .icon{font-size:18px;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+    .chip.s{font-size:13px;padding:8px 15px}.chip.s .icon{font-size:16px}
+    .chip.m{font-size:15px;padding:10px 20px}
+    .chip.l{font-size:17px;padding:12px 24px}.chip.l .icon{font-size:20px}
+
+    .chip.off{
+      background:white;color:#5A5078;border-color:var(--c);
+      box-shadow:0 2px 8px rgba(0,0,0,.04);transform:rotate(var(--rot));
+    }
+    .chip.off:hover{transform:translateY(-4px) scale(1.06) rotate(0deg);box-shadow:0 8px 24px rgba(0,0,0,.09)}
+    .chip.off:active{transform:scale(.93)}
+
+    .chip.on{
+      background:var(--c);color:white;border-color:var(--c);
+      box-shadow:0 4px 18px color-mix(in srgb,var(--c) 45%,transparent),inset 0 1px 2px rgba(255,255,255,.3);
+      text-shadow:0 1px 2px rgba(0,0,0,.1);animation:popIn .4s cubic-bezier(.34,1.56,.64,1);
+      transform:rotate(0deg) scale(1);
+    }
+    @keyframes popIn{0%{transform:scale(.82)}50%{transform:scale(1.14)}100%{transform:scale(1)}}
+    .chip.on:hover{transform:translateY(-3px) scale(1.06);box-shadow:0 8px 28px color-mix(in srgb,var(--c) 50%,transparent)}
+    .chip.on:active{transform:scale(.94)}
+    .chip.on .icon{transform:rotate(15deg) scale(1.18)}
+
+    .chip .chk{
+      width:0;overflow:hidden;opacity:0;display:inline-flex;font-size:14px;
+      transition:width .3s cubic-bezier(.34,1.56,.64,1),opacity .2s ease;
+    }
+    .chip.on .chk{width:18px;opacity:1}
+
+    .result-bar{
+      position:fixed;bottom:0;left:0;right:0;z-index:100;
+      background:rgba(255,249,240,.95);backdrop-filter:blur(12px);
+      border-top:2px solid rgba(184,169,232,.2);padding:16px 24px;
+      transform:translateY(100%);transition:transform .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    .result-bar.vis{transform:translateY(0)}
+    .result-inner{max-width:940px;margin:0 auto;text-align:center}
+    .done-btn{
+      font-family:'Jua',sans-serif;font-size:20px;padding:12px 48px;border-radius:50px;
+      border:none;background:linear-gradient(135deg,#FF8FAB,#D4A5FF);color:white;cursor:pointer;
+      box-shadow:0 4px 20px rgba(212,165,255,.4);transition:all .3s cubic-bezier(.34,1.56,.64,1);letter-spacing:1px;
+    }
+    .done-btn:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 8px 30px rgba(212,165,255,.5)}
+    .done-btn:active{transform:scale(.96)}
+
+    .done-screen{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:100vh;padding:32px;position:relative;z-index:1;animation:fadeIn .6s ease;
+    }
+    .done-card{
+      background:white;border-radius:32px;padding:48px 40px;
+      box-shadow:0 8px 40px rgba(184,169,232,.18);text-align:center;max-width:480px;width:100%;
+    }
+    .done-card h1{font-size:42px;color:#3D3356;margin-bottom:8px}
+    .done-card .msg{font-family:'Gaegu',cursive;font-size:20px;color:#8B7FA8;font-weight:700;margin-bottom:24px}
+    .done-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:28px}
+    .done-tag{
+      font-size:14px;padding:6px 16px;border-radius:50px;
+      background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 70%,white));
+      color:white;text-shadow:0 1px 1px rgba(0,0,0,.1);
+    }
+    .new-btn{
+      font-family:'Jua',sans-serif;font-size:18px;padding:12px 40px;border-radius:50px;
+      border:none;background:linear-gradient(135deg,#76E4C4,#8BB8FF);color:white;cursor:pointer;
+      box-shadow:0 4px 16px rgba(139,184,255,.3);transition:all .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .new-btn:hover{transform:translateY(-3px) scale(1.05)}
+
+    /* Admin */
+    .admin-screen{
+      max-width:800px;margin:0 auto;padding:40px 24px 60px;
+      position:relative;z-index:1;animation:fadeIn .5s ease;
+    }
+    .admin-header{text-align:center;margin-bottom:32px}
+    .admin-header h1{font-size:32px;color:#3D3356}
+    .admin-header .sub{font-family:'Gaegu',cursive;font-size:18px;color:#8B7FA8;font-weight:700;margin-top:4px}
+    .back-btn{
+      font-family:'Jua',sans-serif;font-size:16px;padding:8px 28px;border-radius:50px;
+      border:2px solid #B8A9E8;background:white;color:#6B5F8A;cursor:pointer;
+      transition:all .25s ease;margin-bottom:24px;display:inline-block;
+    }
+    .back-btn:hover{background:#B8A9E8;color:white;transform:scale(1.04)}
+
+    .admin-stats{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px;
+    }
+    .stat-card{background:white;border-radius:20px;padding:24px;text-align:center;box-shadow:0 4px 20px rgba(184,169,232,.12)}
+    .stat-num{font-size:36px;color:#3D3356}
+    .stat-label{font-family:'Gaegu',cursive;font-size:16px;color:#8B7FA8;font-weight:700}
+
+    .child-card{
+      background:white;border-radius:20px;padding:24px;
+      box-shadow:0 4px 20px rgba(184,169,232,.12);margin-bottom:16px;
+    }
+    .child-name{font-size:20px;color:#3D3356;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+    .child-date{font-family:'Gaegu',cursive;font-size:14px;color:#B8A9E8;font-weight:700;margin-bottom:12px}
+    .child-tags{display:flex;flex-wrap:wrap;gap:6px}
+    .child-tag{
+      font-size:13px;padding:5px 14px;border-radius:50px;
+      background:color-mix(in srgb,var(--c) 15%,white);
+      color:color-mix(in srgb,var(--c) 80%,#333);border:1.5px solid var(--c);
+    }
+    .child-del{
+      font-family:'Jua',sans-serif;font-size:12px;padding:4px 12px;border-radius:50px;
+      border:1.5px solid #FFCBA4;background:white;color:#FF9A76;cursor:pointer;
+      margin-left:auto;transition:all .2s;
+    }
+    .child-del:hover{background:#FF9A76;color:white}
+
+    .empty-msg{text-align:center;padding:60px 20px;font-family:'Gaegu',cursive;font-size:22px;color:#B8A9E8;font-weight:700}
+
+    .top-section{margin-bottom:32px}
+    .top-section h2{font-size:22px;color:#3D3356;margin-bottom:16px}
+    .top-bar-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .top-bar-label{font-size:14px;color:#5A5078;min-width:140px;text-align:right}
+    .top-bar-track{flex:1;height:28px;background:#F3F0FA;border-radius:14px;overflow:hidden;position:relative}
+    .top-bar-fill{
+      height:100%;border-radius:14px;display:flex;align-items:center;padding:0 12px;
+      font-size:12px;color:white;font-family:'Jua',sans-serif;
+      transition:width .6s cubic-bezier(.34,1.56,.64,1);min-width:fit-content;
+    }
+
+    .clear-all-btn{
+      font-family:'Jua',sans-serif;font-size:14px;padding:8px 24px;border-radius:50px;
+      border:2px solid #FF8FAB;background:white;color:#FF8FAB;cursor:pointer;
+      transition:all .25s;
+    }
+    .clear-all-btn:hover{background:#FF8FAB;color:white;transform:scale(1.04)}
+
+    .export-section{
+      display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+      margin-bottom:32px;padding:20px;background:white;border-radius:20px;
+      box-shadow:0 4px 20px rgba(184,169,232,.12);
+    }
+    .export-section-title{
+      width:100%;text-align:center;font-size:18px;color:#3D3356;margin-bottom:8px;
+    }
+    .export-btn{
+      font-family:'Jua',sans-serif;font-size:15px;padding:10px 24px;border-radius:50px;
+      border:2.5px solid;cursor:pointer;transition:all .25s ease;
+      display:inline-flex;align-items:center;gap:8px;background:white;
+    }
+    .export-btn:hover{transform:translateY(-2px) scale(1.04)}
+    .export-btn:active{transform:scale(.96)}
+
+    .export-btn.csv{border-color:#76E4C4;color:#3D9E85}
+    .export-btn.csv:hover{background:#76E4C4;color:white}
+    .export-btn.txt{border-color:#8BB8FF;color:#5A82CC}
+    .export-btn.txt:hover{background:#8BB8FF;color:white}
+    .export-btn.json{border-color:#D4A5FF;color:#9B6FD4}
+    .export-btn.json:hover{background:#D4A5FF;color:white}
+
+    .export-toast{
+      position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);
+      background:#3D3356;color:white;font-family:'Jua',sans-serif;
+      padding:12px 32px;border-radius:50px;font-size:16px;z-index:999;
+      box-shadow:0 8px 30px rgba(0,0,0,.2);
+      transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none;
+    }
+    .export-toast.show{transform:translateX(-50%) translateY(0)}
+
+    .bottom-actions{
+      display:flex;justify-content:center;gap:12px;margin-top:24px;flex-wrap:wrap;
+    }
+
+    @media(max-width:600px){
+      .name-card,.done-card{padding:36px 24px;border-radius:24px}
+      .chip.s{font-size:12px;padding:7px 12px}
+      .chip.m{font-size:13px;padding:8px 16px}
+      .chip.l{font-size:15px;padding:10px 20px}
+      .keywords-cloud{gap:8px}
+      .top-bar-label{min-width:100px;font-size:12px}
+      .export-btn{font-size:13px;padding:8px 18px}
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+
+    const COLORS = [
+      '#FF8FAB','#FF9A76','#FFB347','#FFD93D','#B5E48C',
+      '#76E4C4','#7EC8E3','#8BB8FF','#B8A9E8','#D4A5FF',
+      '#FFB3D9','#FFCBA4'
+    ];
+
+    const ALL_KEYWORDS = [
+      { text: '수수께끼', icon: '🤔' },
+      { text: '퀴즈 책', icon: '❓' },
+      { text: '독서 MBTI', icon: '📖' },
+      { text: '마음, 감정', icon: '💖' },
+      { text: '신화', icon: '🏛️' },
+      { text: '직업, 진로, 꿈', icon: '💼' },
+      { text: '돈, 경제', icon: '💰' },
+      { text: '투표, 선거', icon: '🗳️' },
+      { text: '정치, 민주주의', icon: '⚖️' },
+      { text: '공부', icon: '✏️' },
+      { text: '학교생활', icon: '🏫' },
+      { text: '몸, 사춘기', icon: '🌱' },
+      { text: '전쟁, 무기', icon: '⚔️' },
+      { text: '과학, 실험', icon: '🧪' },
+      { text: '수학', icon: '🔢' },
+      { text: '동물, 곤충', icon: '🐾' },
+      { text: '식물', icon: '🌿' },
+      { text: '지구, 자연', icon: '🌏' },
+      { text: '기후변화', icon: '🌡️' },
+      { text: '우주', icon: '🚀' },
+      { text: '교통수단', icon: '🚗' },
+      { text: '인체, 뇌, 의학', icon: '🧬' },
+      { text: '요리, 음식', icon: '🍳' },
+      { text: '반려동물', icon: '🐶' },
+      { text: '게임', icon: '🎮' },
+      { text: '인공지능', icon: '🤖' },
+      { text: '로봇', icon: '🦾' },
+      { text: '발명', icon: '💡' },
+      { text: '스포츠 (축구, 야구)', icon: '⚽' },
+      { text: '종이접기', icon: '🦢' },
+      { text: '미술, 그림그리기', icon: '🎨' },
+      { text: '만들기', icon: '🔨' },
+      { text: '음악', icon: '🎵' },
+      { text: '악기연주', icon: '🎸' },
+      { text: '만화/웹툰', icon: '📚' },
+      { text: '애니메이션, 영화', icon: '🎬' },
+      { text: '코믹, 웃기는 이야기', icon: '😂' },
+      { text: '괴담, 무서운 이야기', icon: '👻' },
+      { text: '모험, 탐험', icon: '🗺️' },
+      { text: '판타지', icon: '🧙' },
+      { text: '서바이벌', icon: '🏕️' },
+      { text: '친구, 우정', icon: '🤝' },
+      { text: '소설', icon: '📕' },
+      { text: '탐정, 추리, 수사', icon: '🔍' },
+      { text: '연애, 로맨스', icon: '💕' },
+      { text: '시', icon: '🌸' },
+      { text: '글쓰기', icon: '📝' },
+      { text: '역사 (한국사, 세계사)', icon: '📜' },
+      { text: '세계문화', icon: '🌐' },
+      { text: '여행', icon: '✈️' },
+      { text: '위인', icon: '👑' },
+      { text: 'K-POP, 아이돌', icon: '🎤' },
+      { text: '유튜브', icon: '📱' },
+    ];
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    const SIZES = ['s','m','m','l'];
+    function getChipMeta(index) {
+      return {
+        size: SIZES[index % SIZES.length],
+        color: COLORS[index % COLORS.length],
+        rot: ((Math.sin(index * 7.3) + 1) / 2 - 0.5) * 7,
+      };
+    }
+
+    /* ─── localStorage-based storage ─── */
+    const STORAGE_PREFIX = 'kw_child:';
+
+    function loadAllChildren() {
+      const entries = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(STORAGE_PREFIX)) {
+          try {
+            entries.push(JSON.parse(localStorage.getItem(key)));
+          } catch(e) {}
+        }
+      }
+      return entries.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    }
+
+    function saveChild(name, keywords) {
+      const key = STORAGE_PREFIX + name.trim().replace(/\s+/g, '_');
+      const data = { name: name.trim(), keywords, timestamp: Date.now() };
+      try { localStorage.setItem(key, JSON.stringify(data)); return true; } catch(e) { return false; }
+    }
+
+    function deleteChild(name) {
+      const key = STORAGE_PREFIX + name.trim().replace(/\s+/g, '_');
+      try { localStorage.removeItem(key); return true; } catch(e) { return false; }
+    }
+
+    function clearAllChildren() {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(STORAGE_PREFIX)) keysToRemove.push(key);
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+      return true;
+    }
+
+    /* ─── Export helpers ─── */
+    function downloadFile(filename, content, mimeType) {
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + content], { type: mimeType + ';charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportCSV(children) {
+      const allKw = ALL_KEYWORDS.map(k => k.text);
+      const header = ['이름', '참여시간', '선택 키워드 수', ...allKw];
+      const rows = children.map(c => {
+        const date = c.timestamp ? new Date(c.timestamp).toLocaleString('ko-KR') : '';
+        const marks = allKw.map(kw => c.keywords.includes(kw) ? 'O' : '');
+        return [c.name, date, c.keywords.length, ...marks];
+      });
+      const kwCount = {};
+      children.forEach(c => c.keywords.forEach(k => { kwCount[k] = (kwCount[k]||0) + 1; }));
+      const countRow = ['[합계]', '', '', ...allKw.map(kw => kwCount[kw] || 0)];
+      const csvContent = [header, ...rows, [], countRow]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+      const today = new Date().toISOString().slice(0,10);
+      downloadFile(`키워드_선택_결과_${today}.csv`, csvContent, 'text/csv');
+    }
+
+    function exportText(children) {
+      const kwCount = {};
+      children.forEach(c => c.keywords.forEach(k => { kwCount[k] = (kwCount[k]||0) + 1; }));
+      const topKw = Object.entries(kwCount).sort((a,b) => b[1]-a[1]);
+      let txt = '═══════════════════════════════════\n';
+      txt += '      📊 키워드 선택 결과 보고서\n';
+      txt += '═══════════════════════════════════\n\n';
+      txt += `📅 내보내기 날짜: ${new Date().toLocaleString('ko-KR')}\n`;
+      txt += `👦 참여 어린이: ${children.length}명\n`;
+      txt += `🏷️ 선택된 키워드 종류: ${Object.keys(kwCount).length}개\n`;
+      txt += `📊 1인당 평균 선택 수: ${children.length > 0 ? Math.round(children.reduce((s,c) => s+c.keywords.length, 0) / children.length) : 0}개\n\n`;
+      txt += '───────────────────────────────────\n';
+      txt += '  🏆 인기 키워드 순위\n';
+      txt += '───────────────────────────────────\n';
+      topKw.forEach(([kw, cnt], i) => {
+        const bar = '█'.repeat(Math.min(cnt * 3, 30));
+        txt += `  ${String(i+1).padStart(2)}위  ${kw.padEnd(16)} ${bar} ${cnt}명\n`;
+      });
+      txt += '\n───────────────────────────────────\n';
+      txt += '  👦👧 어린이별 선택 결과\n';
+      txt += '───────────────────────────────────\n';
+      children.forEach(c => {
+        const date = c.timestamp ? new Date(c.timestamp).toLocaleString('ko-KR') : '';
+        txt += `\n  🧒 ${c.name} (${c.keywords.length}개) - ${date}\n`;
+        txt += `     ${c.keywords.join(', ')}\n`;
+      });
+      txt += '\n═══════════════════════════════════\n';
+      const today = new Date().toISOString().slice(0,10);
+      downloadFile(`키워드_선택_결과_${today}.txt`, txt, 'text/plain');
+    }
+
+    function exportJSON(children) {
+      const kwCount = {};
+      children.forEach(c => c.keywords.forEach(k => { kwCount[k] = (kwCount[k]||0) + 1; }));
+      const data = {
+        exportDate: new Date().toISOString(),
+        summary: {
+          totalChildren: children.length,
+          uniqueKeywords: Object.keys(kwCount).length,
+          avgSelectCount: children.length > 0 ? +(children.reduce((s,c) => s+c.keywords.length, 0) / children.length).toFixed(1) : 0,
+          keywordRanking: Object.entries(kwCount).sort((a,b) => b[1]-a[1]).map(([kw, cnt]) => ({ keyword: kw, count: cnt })),
+        },
+        children: children.map(c => ({
+          name: c.name,
+          timestamp: c.timestamp ? new Date(c.timestamp).toISOString() : null,
+          keywordCount: c.keywords.length,
+          keywords: c.keywords,
+        })),
+      };
+      const today = new Date().toISOString().slice(0,10);
+      downloadFile(`키워드_선택_결과_${today}.json`, JSON.stringify(data, null, 2), 'application/json');
+    }
+
+    /* ─── Components ─── */
+
+    function NameScreen({ onStart, onAdmin }) {
+      const [name, setName] = useState("");
+      return (
+        <>
+          <div className="bg-blobs"/>
+          <div className="name-screen">
+            <div className="name-card">
+              <h1>⭐ 키워드 고르기 ⭐</h1>
+              <div className="sub">이름을 알려주세요!</div>
+              <input
+                className="name-input" placeholder="이름을 입력해요"
+                value={name} onChange={e => setName(e.target.value)}
+                onKeyDown={e => { if(e.key==='Enter' && name.trim()) onStart(name.trim()) }}
+                maxLength={20} autoFocus
+              />
+              <br/>
+              <button className="start-btn" disabled={!name.trim()} onClick={() => onStart(name.trim())}>
+                시작하기! 🚀
+              </button>
+              <br/>
+              <button className="admin-link" onClick={onAdmin}>📊 선생님 결과 보기</button>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    function SelectScreen({ childName, onDone }) {
+      const [shuffled] = useState(() => shuffle(ALL_KEYWORDS));
+      const [selected, setSelected] = useState(new Set());
+      const [saving, setSaving] = useState(false);
+      const badgeRef = useRef(null);
+
+      const toggle = useCallback((text) => {
+        setSelected(prev => {
+          const next = new Set(prev);
+          if (next.has(text)) next.delete(text); else next.add(text);
+          return next;
+        });
+        if (badgeRef.current) {
+          badgeRef.current.style.animation = 'none';
+          badgeRef.current.offsetHeight;
+          badgeRef.current.style.animation = '';
+        }
+      }, []);
+
+      const handleDone = () => {
+        if (selected.size === 0) return;
+        setSaving(true);
+        saveChild(childName, Array.from(selected));
+        setSaving(false);
+        onDone(Array.from(selected));
+      };
+
+      return (
+        <>
+          <div className="bg-blobs"/>
+          <div className="select-screen">
+            <div className="sel-header">
+              <h1>⭐ 내가 좋아하는 키워드 ⭐</h1>
+              <div className="who">🙋 {childName} 친구, 관심 있는 키워드를 골라봐요!</div>
+            </div>
+            <div className="counter-bar">
+              <div className="counter-inner">
+                <div className="counter-badge" ref={badgeRef}>
+                  <span>선택한 키워드</span>
+                  <span className="counter-num">{selected.size}</span>
+                  <span>개</span>
+                </div>
+                <button className="reset-btn" onClick={() => setSelected(new Set())}>전체 해제</button>
+              </div>
+            </div>
+            <div className="keywords-cloud">
+              {shuffled.map((kw, i) => {
+                const m = getChipMeta(i);
+                const isOn = selected.has(kw.text);
+                return (
+                  <div key={kw.text}
+                    className={`chip ${m.size} ${isOn ? 'on' : 'off'}`}
+                    style={{"--c": m.color, "--rot": m.rot + "deg", animationDelay: `${0.02*i}s`}}
+                    onClick={() => toggle(kw.text)}
+                  >
+                    <span className="chk">✓</span>
+                    <span className="icon">{kw.icon}</span>
+                    <span>{kw.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className={`result-bar ${selected.size > 0 ? 'vis' : ''}`}>
+              <div className="result-inner">
+                <button className="done-btn" onClick={handleDone} disabled={saving}>
+                  {saving ? '저장 중...' : '선택 완료! 🎉'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    function DoneScreen({ childName, keywords, onNew }) {
+      return (
+        <>
+          <div className="bg-blobs"/>
+          <div className="done-screen">
+            <div className="done-card">
+              <h1>🎉</h1>
+              <div className="msg">{childName} 친구의 키워드가 저장되었어요!</div>
+              <div className="done-tags">
+                {keywords.map((kw, i) => (
+                  <span key={kw} className="done-tag" style={{"--c": COLORS[i % COLORS.length]}}>{kw}</span>
+                ))}
+              </div>
+              <button className="new-btn" onClick={onNew}>다른 친구 시작하기 →</button>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    function AdminScreen({ onBack }) {
+      const [children, setChildren] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [toast, setToast] = useState("");
+
+      const load = () => {
+        setLoading(true);
+        const data = loadAllChildren();
+        setChildren(data);
+        setLoading(false);
+      };
+
+      useEffect(() => { load(); }, []);
+
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(""), 2500);
+      };
+
+      const handleDelete = (name) => {
+        if (!confirm(`'${name}' 데이터를 삭제할까요?`)) return;
+        deleteChild(name);
+        load();
+      };
+
+      const handleClearAll = () => {
+        if (!confirm('모든 데이터를 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+        clearAllChildren();
+        load();
+      };
+
+      const handleExportCSV = () => { exportCSV(children); showToast("📥 CSV 파일이 다운로드되었어요!"); };
+      const handleExportTxt = () => { exportText(children); showToast("📥 텍스트 보고서가 다운로드되었어요!"); };
+      const handleExportJSON = () => { exportJSON(children); showToast("📥 JSON 파일이 다운로드되었어요!"); };
+
+      const kwCount = {};
+      children.forEach(c => c.keywords.forEach(k => { kwCount[k] = (kwCount[k]||0) + 1; }));
+      const topKw = Object.entries(kwCount).sort((a,b) => b[1]-a[1]).slice(0, 10);
+      const maxCount = topKw.length > 0 ? topKw[0][1] : 1;
+
+      return (
+        <>
+          <div className="bg-blobs"/>
+          <div className="admin-screen">
+            <div className="admin-header">
+              <h1>📊 키워드 선택 결과</h1>
+              <div className="sub">어린이들이 고른 키워드를 확인하고 내보내요</div>
+            </div>
+
+            <button className="back-btn" onClick={onBack}>← 돌아가기</button>
+
+            {loading ? (
+              <div className="empty-msg">불러오는 중...</div>
+            ) : children.length === 0 ? (
+              <div className="empty-msg">아직 저장된 데이터가 없어요 🙂</div>
+            ) : (
+              <>
+                <div className="export-section">
+                  <div className="export-section-title">📥 데이터 내보내기</div>
+                  <button className="export-btn csv" onClick={handleExportCSV}>
+                    <span>📗</span> CSV (엑셀)
+                  </button>
+                  <button className="export-btn txt" onClick={handleExportTxt}>
+                    <span>📄</span> 텍스트 보고서
+                  </button>
+                  <button className="export-btn json" onClick={handleExportJSON}>
+                    <span>📦</span> JSON 데이터
+                  </button>
+                </div>
+
+                <div className="admin-stats">
+                  <div className="stat-card">
+                    <div className="stat-num">{children.length}</div>
+                    <div className="stat-label">참여 어린이</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-num">{Object.keys(kwCount).length}</div>
+                    <div className="stat-label">선택된 키워드 종류</div>
+                  </div>
+                  <div className="stat-card">
+                    <div className="stat-num">
+                      {children.length > 0 ? Math.round(children.reduce((s,c) => s+c.keywords.length, 0) / children.length) : 0}
+                    </div>
+                    <div className="stat-label">평균 선택 수</div>
+                  </div>
+                </div>
+
+                {topKw.length > 0 && (
+                  <div className="top-section">
+                    <h2>🏆 인기 키워드 TOP 10</h2>
+                    {topKw.map(([kw, cnt], i) => {
+                      const kwObj = ALL_KEYWORDS.find(k => k.text === kw);
+                      const pct = Math.max((cnt / maxCount) * 100, 18);
+                      return (
+                        <div className="top-bar-row" key={kw}>
+                          <span className="top-bar-label">{kwObj?.icon || ''} {kw}</span>
+                          <div className="top-bar-track">
+                            <div className="top-bar-fill" style={{width: pct+'%', background: COLORS[i % COLORS.length]}}>
+                              {cnt}명
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <h2 style={{fontSize:22,color:'#3D3356',marginBottom:16}}>👦👧 개별 결과</h2>
+                {children.map((child, ci) => (
+                  <div className="child-card" key={child.name + ci}>
+                    <div className="child-name">
+                      <span>🧒 {child.name}</span>
+                      <span style={{fontSize:14,color:'#B8A9E8'}}>({child.keywords.length}개)</span>
+                      <button className="child-del" onClick={() => handleDelete(child.name)}>삭제</button>
+                    </div>
+                    <div className="child-date">
+                      {child.timestamp ? new Date(child.timestamp).toLocaleString('ko-KR') : ''}
+                    </div>
+                    <div className="child-tags">
+                      {child.keywords.map((kw, ki) => (
+                        <span key={kw} className="child-tag" style={{"--c": COLORS[ki % COLORS.length]}}>{kw}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                <div className="bottom-actions">
+                  <button className="clear-all-btn" onClick={handleClearAll}>🗑 전체 데이터 초기화</button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className={`export-toast ${toast ? 'show' : ''}`}>{toast}</div>
+        </>
+      );
+    }
+
+    /* ─── App ─── */
+    function App() {
+      const [screen, setScreen] = useState("name");
+      const [childName, setChildName] = useState("");
+      const [doneKeywords, setDoneKeywords] = useState([]);
+
+      return (
+        <>
+          {screen === "name" && (
+            <NameScreen
+              onStart={(name) => { setChildName(name); setScreen("select"); }}
+              onAdmin={() => setScreen("admin")}
+            />
+          )}
+          {screen === "select" && (
+            <SelectScreen
+              childName={childName}
+              onDone={(kws) => { setDoneKeywords(kws); setScreen("done"); }}
+            />
+          )}
+          {screen === "done" && (
+            <DoneScreen
+              childName={childName}
+              keywords={doneKeywords}
+              onNew={() => { setChildName(""); setScreen("name"); }}
+            />
+          )}
+          {screen === "admin" && (
+            <AdminScreen onBack={() => setScreen("name")} />
+          )}
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
