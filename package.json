@@ -1,0 +1,11 @@
+{
+  "name": "keyword-card",
+  "version": "1.0.0",
+  "description": "키워드 고르기 웹앱",
+  "scripts": {
+    "start": "npx serve -s . -l $PORT"
+  },
+  "dependencies": {
+    "serve": "^14.2.4"
+  }
+}
